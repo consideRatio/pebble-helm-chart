@@ -1,4 +1,10 @@
----
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
+#
+# This workflow will publish the Helm chart to jupyterhub/helm-chart's gh-pages
+# branch, which acts like a Helm chart repository (a static website with
+# index.yaml following a certain syntax).
+#
 name: Publish
 
 on:
@@ -9,7 +15,6 @@ on:
       - "**"
 
 jobs:
-
   publish:
     runs-on: ubuntu-latest
     steps:
