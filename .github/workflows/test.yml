@@ -10,19 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           # chartpress requires the full history
           fetch-depth: 0
-      - uses: jupyterhub/action-k3s-helm@v0.2.2
+
+      # ref: https://github.com/jupyterhub/action-k3s-helm
+      - uses: jupyterhub/action-k3s-helm@v2
         with:
           k3s-version: ""
           helm-version: ""
           metrics-enabled: false
           traefik-enabled: false
-      - uses: actions/setup-python@v2
+
+      - uses: actions/setup-python@v3
         with:
-          python-version: '3.8'
+          python-version: "3.10"
+
       - name: Run tests
         run: |
           helm lint pebble --values ci/ci-values.yaml
@@ -30,14 +34,10 @@ jobs:
           helm template pebble ./pebble --values ci/ci-values.yaml --validate
           helm install pebble ./pebble --values ci/ci-values.yaml --wait --timeout 60s
           helm test pebble
-      - name: Emit report on success
-        if: success()
-        run: |
-          kubectl get all --all-namespaces
-      - name: Emit report on failure
-        if: failure()
-        run: |
-          kubectl get all --all-namespaces
-          kubectl logs pebble-test --all-containers --prefix
-          kubectl logs pebble-coredns-test --all-containers --prefix
-          kubectl logs deploy/pebble-coredns --all-containers --prefix
+
+      # ref: https://github.com/jupyterhub/action-k8s-namespace-report
+      - name: Kubernetes namespace report
+        uses: jupyterhub/action-k8s-namespace-report@v1
+        if: always()
+        with:
+          important-workloads: pebble-test pebble-coredns-test deploy/pebble-coredns
